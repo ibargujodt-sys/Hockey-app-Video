@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Planilla Hockey">
+<meta name="theme-color" content="#0F2A1C">
+<title>Planilla de Partido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F2A1C;
+    --panel:#173622;
+    --panel-light:#20492E;
+    --panel-lighter:#2A5A3A;
+    --line: rgba(245,241,232,0.14);
+    --chalk:#F5F1E8;
+    --chalk-dim:#B9C4B9;
+    --gold:#D9A441;
+    --gold-dim:#8f6c2f;
+    --favor:#3F8F5E;
+    --favor-light:#4CAE72;
+    --contra:#BD4438;
+    --contra-light:#D4574A;
+    --turnover:#B07A2E;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(ellipse at top, #163726 0%, var(--bg) 60%);
+    color: var(--chalk);
+    font-family:'Inter', system-ui, sans-serif;
+    min-height:100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app{ max-width: 1100px; margin:0 auto; padding: 16px 16px 60px; }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding: 10px 4px 18px; }
+  .brand{ font-family:'Oswald', sans-serif; font-weight:700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 15px; color: var(--chalk-dim); display:flex; align-items:center; gap:8px; }
+  .brand .dot{ width:8px;height:8px;border-radius:50%;background:var(--gold); }
+
+  .hidden{ display:none !important; }
+  .home-header{ margin-bottom: 18px; }
+  .home-header h1{ font-family:'Oswald', sans-serif; font-size: 30px; font-weight:700; margin:0 0 4px; letter-spacing:0.01em; }
+  .home-header p{ margin:0; color:var(--chalk-dim); font-size:14px; }
+  .team-header{ display:flex; align-items:center; gap:14px; margin-bottom: 18px; }
+  .team-avatar{ width:64px; height:64px; border-radius:50%; background: var(--panel-light); border:1px solid var(--line); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:22px; color:var(--chalk-dim); cursor:pointer; }
+  .team-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .team-info{ flex:1; }
+  .team-info h1{ font-family:'Oswald', sans-serif; font-size: 26px; font-weight:700; margin:0 0 2px; }
+  .team-edit-btn{ background: none; border:1px solid var(--line); color:var(--chalk-dim); border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer; font-family:'Inter',sans-serif; }
+  .team-edit-btn:hover{ background: var(--panel-light); color: var(--chalk); }
+
+  .new-match-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 22px; }
+  .new-match-form{ display:flex; gap:10px; flex-wrap:wrap; }
+  .new-match-form input{ flex:1; min-width:160px; background: var(--panel-light); border:1px solid var(--line); color: var(--chalk); padding: 12px 14px; border-radius: 10px; font-size:15px; font-family:'Inter',sans-serif; }
+  .new-match-form input::placeholder{ color: var(--chalk-dim); }
+  .btn{ border:none; cursor:pointer; font-family:'Inter',sans-serif; font-weight:600; border-radius:10px; padding: 12px 18px; font-size:15px; transition: transform .08s ease, filter .15s ease; }
+  .btn:active{ transform: scale(0.96); }
+  .btn-gold{ background: var(--gold); color:#20240F; }
+  .btn-gold:hover{ filter:brightness(1.08); }
+  .btn-ghost{ background: transparent; border:1px solid var(--line); color:var(--chalk); }
+  .btn-ghost:hover{ background: var(--panel-light); }
+
+  .section-label{ font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.08em; font-size:13px; color:var(--chalk-dim); margin: 4px 0 10px; }
+  .matches-list{ display:flex; flex-direction:column; gap:10px; }
+  .match-card{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+  .match-card:hover{ background: var(--panel-light); }
+  .match-card .mc-left{ display:flex; flex-direction:column; gap:3px; }
+  .match-card .mc-name{ font-weight:600; font-size:16px; }
+  .match-card .mc-date{ font-size:12.5px; color:var(--chalk-dim); }
+  .match-card .mc-score{ font-family:'Oswald', sans-serif; font-size:20px; color:var(--gold); font-weight:700; display:flex; align-items:center; gap:10px; }
+  .mc-delete{ background:none; border:none; color: var(--chalk-dim); font-size:18px; cursor:pointer; padding: 4px 8px; border-radius:8px; }
+  .mc-delete:hover{ background: rgba(189,68,56,0.25); color: var(--contra-light); }
+  .empty-state{ text-align:center; padding: 40px 20px; color:var(--chalk-dim); border: 1px dashed var(--line); border-radius: var(--radius); }
+
+  .match-topbar{ display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .back-btn{ background: var(--panel); border:1px solid var(--line); color:var(--chalk); width:40px; height:40px; border-radius:10px; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .match-title{ flex:1; min-width: 140px; }
+  .match-title .mt-name{ font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; }
+  .match-title .mt-date{ font-size:12px; color:var(--chalk-dim); }
+  .topbar-actions{ display:flex; gap:8px; }
+
+  .scoreboard{ background: linear-gradient(180deg, #143722 0%, #0E2718 100%); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 12px; box-shadow: inset 0 0 30px rgba(0,0,0,0.35); }
+  .sb-top{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  .sb-block{ display:flex; flex-direction:column; align-items:center; min-width:60px; }
+  .sb-label{ font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--chalk-dim); font-family:'Oswald',sans-serif;}
+  .sb-value{ font-family:'Oswald', sans-serif; font-size: 34px; font-weight:700; color: var(--gold); line-height:1.1; font-variant-numeric: tabular-nums;}
+  .sb-value.small{ font-size:24px; color:var(--chalk); }
+  .sb-timer{ display:flex; align-items:center; gap:10px; }
+  .timer-btn{ background: var(--panel-lighter); border:1px solid var(--line); color:var(--chalk); width:38px; height:38px; border-radius:50%; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
+
+  .quarter-tabs{ display:flex; gap:6px; margin-top:14px; }
+  .q-tab{ flex:1; text-align:center; padding: 9px 6px; border-radius:9px; border:1px solid var(--line); background: var(--panel-light); color:var(--chalk-dim); font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; cursor:pointer; letter-spacing:0.04em; }
+  .q-tab.active{ background: var(--gold); color:#20240F; border-color: var(--gold); }
+  .q-tab .q-count{ display:block; font-size:10px; font-weight:400; opacity:0.75; margin-top:1px; }
+
+  .grid-title{ display:flex; align-items:center; justify-content:space-between; margin: 18px 0 10px; flex-wrap:wrap; gap:8px;}
+
+  .event-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 10px; }
+  .ev-btn-wrap{ position:relative; }
+  .ev-btn{ width:100%; min-height: 74px; border-radius: var(--radius); border: 1px solid var(--line); color: var(--chalk); background: var(--panel); font-family:'Inter',sans-serif; font-weight:600; font-size: 15px; cursor:pointer; padding: 10px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; transition: transform .08s ease, filter .15s ease; }
+  .ev-btn small{ font-weight:400; font-size:11px; color:var(--chalk-dim); }
+  .ev-btn:active{ transform: scale(0.95); }
+  .ev-btn.favor{ background: var(--favor); border-color: var(--favor-light); }
+  .ev-btn.favor:hover{ background: var(--favor-light); }
+  .ev-btn.contra{ background: var(--contra); border-color: var(--contra-light); }
+  .ev-btn.contra:hover{ background: var(--contra-light); }
+  .ev-btn.turnover{ background: var(--turnover); }
+  .ev-btn.turnover:hover{ filter:brightness(1.1); }
+  .ev-btn.ataque:hover{ background: var(--panel-light); }
+  .ev-btn.custom{ background: var(--panel-light); }
+  .ev-btn.custom:hover{ background: var(--panel-lighter); }
+  .ev-btn.add-new{ background:transparent; border-style:dashed; color:var(--chalk-dim); }
+  .ev-btn.add-new:hover{ background: var(--panel); color:var(--chalk); }
+  .ev-edit{ position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; background: rgba(0,0,0,0.32); border:none; color:var(--chalk); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; }
+  .ev-edit:hover{ background: rgba(0,0,0,0.55); }
+
+  .subtype-panel{ grid-column: 1 / -1; background: var(--panel-light); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .subtype-panel .st-label{ font-size:12.5px; color:var(--chalk-dim); margin-right:4px; width:100%; }
+  .st-btn{ padding: 10px 16px; border-radius: 10px; border:1px solid var(--line); background: var(--panel-lighter); color:var(--chalk); font-weight:600; font-size:14px; cursor:pointer; }
+  .st-btn:active{ transform:scale(0.95); }
+  .st-cancel{ background:transparent; color:var(--chalk-dim); border:1px solid var(--line); padding:10px 14px; border-radius:10px; cursor:pointer; }
+
+  .log-section{ margin-top: 24px; }
+  .log-list{ display:flex; flex-direction:column; gap:6px; max-height: 320px; overflow-y:auto; padding-right:2px; }
+  .log-item{ background: var(--panel); border:1px solid var(--line); border-radius: 10px; padding: 9px 12px; display:flex; align-items:center; justify-content:space-between; font-size: 14px; }
+  .log-item .li-left{ display:flex; align-items:center; gap:10px; }
+  .log-item .li-time{ font-family:'Oswald',sans-serif; color:var(--gold); font-size:12.5px; min-width:56px; }
+  .log-item .li-tag{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .li-del{ background:none; border:none; color:var(--chalk-dim); cursor:pointer; font-size:16px; padding:4px 6px; }
+  .li-del:hover{ color: var(--contra-light); }
+  .log-empty{ color:var(--chalk-dim); font-size:14px; text-align:center; padding:20px; }
+
+  .modal-backdrop{ position:fixed; inset:0; background: rgba(5,15,10,0.65); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .modal{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 20px; width: 100%; max-width: 420px; }
+  .modal h3{ margin:0 0 4px; font-family:'Oswald',sans-serif; font-size:19px; }
+  .modal p.hint{ margin: 0 0 14px; font-size:13px; color:var(--chalk-dim); }
+  .modal input{ width:100%; background: var(--panel-light); border:1px solid var(--line); color:var(--chalk); padding: 12px 14px; border-radius:10px; font-size:15px; margin-bottom:10px; font-family:'Inter',sans-serif; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+
+  /* resumen */
+  .resumen-toggle{ display:flex; gap:8px; margin-bottom:16px; }
+  .rt-btn{ padding:9px 16px; border-radius:9px; border:1px solid var(--line); background:var(--panel); color:var(--chalk-dim); font-weight:600; font-size:13px; cursor:pointer; font-family:'Inter',sans-serif; }
+  .rt-btn.active{ background:var(--gold); color:#20240F; border-color:var(--gold); }
+
+  .chart-card{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom:14px; }
+  .chart-card h4{ margin:0 0 12px; font-family:'Oswald',sans-serif; font-size:15px; text-transform:uppercase; letter-spacing:0.05em; color:var(--chalk-dim); }
+  .bar-row{ margin-bottom:12px; }
+  .bar-row .br-label{ display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:5px; }
+  .bar-row .br-count{ font-family:'Oswald',sans-serif; color:var(--gold); font-weight:700; }
+  .bar-track{ height: 14px; background: var(--panel-light); border-radius: 7px; overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:7px; min-width:3px; }
+
+  table.resumen-table{ width:100%; border-collapse: collapse; font-size:13.5px; }
+  table.resumen-table th, table.resumen-table td{ padding: 9px 8px; text-align:center; border-bottom: 1px solid var(--line); }
+  table.resumen-table th{ color:var(--chalk-dim); font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:0.03em; text-transform:uppercase; font-size:11.5px; }
+  table.resumen-table td:first-child, table.resumen-table th:first-child{ text-align:left; }
+  table.resumen-table td.total-col{ color:var(--gold); font-weight:700; }
+  table.resumen-table tr:last-child td{ border-bottom:none; }
+
+  @media (max-width: 480px){
+    .sb-value{ font-size:26px; }
+    .event-grid{ grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> Planilla de Partido</div>
+    <button class="btn btn-ghost" style="padding:8px 12px;font-size:13px;" onclick="abrirConfig()">⚙️ Conectar Sheets</button>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div id="home-screen">
+    <div class="team-header">
+      <div class="team-avatar" id="team-avatar" onclick="abrirEquipoConfig()">🏑</div>
+      <div class="team-info">
+        <h1 id="team-nombre">Tus partidos</h1>
+        <p style="margin:0; color:var(--chalk-dim); font-size:13px;">Cargá los eventos en vivo y consultalos cuando quieras.</p>
+      </div>
+      <button class="team-edit-btn" onclick="abrirEquipoConfig()">✎ Editar</button>
+    </div>
+
+    <div class="new-match-card">
+      <div class="section-label">Nuevo partido</div>
+      <div class="new-match-form">
+        <input id="input-nombre" type="text" placeholder="Nombre / rival (ej: vs. San Fernando)">
+        <button class="btn btn-gold" onclick="crearPartido()">Empezar</button>
+      </div>
+    </div>
+
+    <div class="new-match-card" style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <div>
+        <div class="section-label" style="margin:0 0 4px;">Google Sheets</div>
+        <div style="font-size:12.5px; color:var(--chalk-dim);" id="sheets-status">No conectado todavía</div>
+      </div>
+      <button class="btn btn-ghost" onclick="configurarSheetsUrl()">⚙ Configurar</button>
+    </div>
+
+    <div class="section-label">Historial</div>
+    <div id="matches-list" class="matches-list"></div>
+  </div>
+
+  <!-- MATCH SCREEN -->
+  <div id="match-screen" class="hidden">
+    <div class="match-topbar">
+      <button class="back-btn" onclick="volverHome()">←</button>
+      <div class="match-title">
+        <div class="mt-name" id="mt-name">-</div>
+        <div class="mt-date" id="mt-date">-</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" style="padding:9px 14px;font-size:13px;" onclick="abrirObservaciones()">📝 Observaciones</button>
+        <button class="btn btn-ghost" style="padding:9px 14px;font-size:13px;" onclick="abrirResumen()">📊 Resumen</button>
+      </div>
+    </div>
+
+    <div class="scoreboard">
+      <div class="sb-top">
+        <div class="sb-block">
+          <div class="sb-label">Favor</div>
+          <div class="sb-value" id="sb-favor">0</div>
+        </div>
+        <div class="sb-block">
+          <div class="sb-label">Ataq. Izq</div>
+          <div class="sb-value small" id="sb-izq">0</div>
+        </div>
+        <div class="sb-timer">
+          <button class="timer-btn" id="timer-toggle" onclick="toggleTimer()">▶</button>
+          <div class="sb-block">
+            <div class="sb-label" id="sb-timer-label">Q1</div>
+            <div class="sb-value small" id="sb-timer">00:00</div>
+          </div>
+        </div>
+        <div class="sb-block">
+          <div class="sb-label">Ataq. Der</div>
+          <div class="sb-value small" id="sb-der">0</div>
+        </div>
+        <div class="sb-block">
+          <div class="sb-label">Contra</div>
+          <div class="sb-value" id="sb-contra" style="color:var(--contra-light);">0</div>
+        </div>
+      </div>
+      <div class="quarter-tabs" id="quarter-tabs"></div>
+    </div>
+
+    <div class="grid-title">
+      <div class="section-label" style="margin:0;">Registrar evento</div>
+      <button class="btn btn-ghost" style="padding:8px 12px;font-size:13px;" onclick="deshacer()">↩ Deshacer último</button>
+    </div>
+    <div class="event-grid" id="event-grid"></div>
+
+    <div class="log-section">
+      <div class="section-label">Registro del partido</div>
+      <div id="log-list" class="log-list"></div>
+    </div>
+  </div>
+
+  <!-- RESUMEN SCREEN -->
+  <div id="resumen-screen" class="hidden">
+    <div class="match-topbar">
+      <button class="back-btn" onclick="cerrarResumen()">←</button>
+      <div class="match-title">
+        <div class="mt-name">Resumen del partido</div>
+        <div class="mt-date" id="rs-date">-</div>
+      </div>
+    </div>
+
+    <div class="resumen-toggle">
+      <button class="rt-btn active" id="rt-grafico" onclick="cambiarVistaResumen('grafico')">Gráfico</button>
+      <button class="rt-btn" id="rt-tabla" onclick="cambiarVistaResumen('tabla')">Tabla por cuarto</button>
+      <button class="rt-btn" style="margin-left:auto;" onclick="exportarResumenTexto()">📋 Copiar resumen</button>
+      <button class="rt-btn" onclick="enviarASheets()">☁️ Enviar a Sheets</button>
+    </div>
+
+    <div id="resumen-grafico"></div>
+    <div id="resumen-tabla" class="hidden"></div>
+    <div id="resumen-observaciones"></div>
+  </div>
+</div>
+
+<div id="obs-backdrop" class="modal-backdrop hidden">
+  <div class="modal" style="max-width:520px;">
+    <h3>Observaciones del partido</h3>
+    <p class="hint">Anotá lo que quieras: resumen general, jugadoras destacadas, ajustes tácticos, lo que necesites.</p>
+    <textarea id="obs-texto" style="width:100%; min-height:220px; background: var(--panel-light); border:1px solid var(--line); color:var(--chalk); padding:12px 14px; border-radius:10px; font-size:15px; font-family:'Inter',sans-serif; resize:vertical;" placeholder="Escribí acá tus observaciones..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarObservaciones()">Cancelar</button>
+      <button class="btn btn-gold" onclick="guardarObservaciones()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="config-backdrop" class="modal-backdrop hidden">
+  <div class="modal" style="max-width:520px;">
+    <h3>Conectar Google Sheets</h3>
+    <p class="hint">Pegá acá la URL que te dio Google Apps Script al publicar tu planilla como aplicación web (termina en /exec). Una vez guardada, vas a poder mandar el resumen de cualquier partido con un toque.</p>
+    <input id="config-url" type="text" placeholder="https://script.google.com/macros/s/..../exec">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarConfig()">Cancelar</button>
+      <button class="btn btn-gold" onclick="guardarConfig()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="equipo-backdrop" class="modal-backdrop hidden">
+  <div class="modal" style="max-width:460px;">
+    <h3>Editar equipo</h3>
+    <p class="hint">Ponele nombre y una foto o escudo. Se guarda en este dispositivo.</p>
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+      <div class="team-avatar" id="equipo-preview" style="width:64px;height:64px;">🏑</div>
+      <div>
+        <input type="file" accept="image/*" id="equipo-foto-input" style="display:none" onchange="onEquipoFoto(event)">
+        <button class="btn btn-ghost" style="padding:8px 12px; font-size:13px;" onclick="document.getElementById('equipo-foto-input').click()">📷 Elegir foto</button>
+      </div>
+    </div>
+    <input id="equipo-nombre-input" type="text" placeholder="Nombre del equipo">
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn btn-ghost" style="color:var(--contra-light); border-color:var(--contra);" onclick="quitarFotoEquipo()">Quitar foto</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost" onclick="cerrarEquipoConfig()">Cancelar</button>
+        <button class="btn btn-gold" onclick="guardarEquipoConfig()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3 id="modal-titulo">Agregar botón</h3>
+    <p class="hint">Le podés poner nombre y, si querés, opciones (separadas por coma). Ej: "Corto, Jugada, Pegada, Otra". Si dejás las opciones vacías, el botón registra el evento directo, sin submenú.</p>
+    <input id="custom-nombre" type="text" placeholder="Nombre del evento (ej: Córner corto)">
+    <input id="custom-subtipos" type="text" placeholder="Opciones, separadas por coma (opcional)">
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn btn-ghost" id="modal-eliminar" style="display:none; color:var(--contra-light); border-color:var(--contra);" onclick="eliminarDesdeModal()">Eliminar</button>
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-gold" onclick="guardarModal()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let partidos = [];
+let tiposCustom = [];
+let partidoActual = null;
+let subtipoAbierto = null;
+let timerInterval = null;
+let corriendo = false;
+let inicioTimestamp = null;
+let vistaResumen = 'grafico';
+let overridesBase = {};
+let sheetsUrl = '';
+let equipoConfig = { nombre:'', foto:'' };
+let editandoId = null;      // id del tipo que se está editando (null = creando nuevo)
+let editandoEsBase = false; // true si es uno de los botones originales
+
+const TIPOS_BASE = [
+  { id:'ataque_izq', nombre:'Ataque Izquierda', clase:'ataque' },
+  { id:'ataque_der', nombre:'Ataque Derecha', clase:'ataque' },
+  { id:'gol_favor', nombre:'Gol a favor', clase:'favor', subtipos:['Corto','Jugada','Pegada','Otra'] },
+  { id:'gol_contra', nombre:'Gol en contra', clase:'contra', subtipos:['Corto','Jugada','Pegada','Otra'] },
+  { id:'perdida', nombre:'Pérdida de bocha', sub:'Mitad de cancha', clase:'turnover' },
+];
+
+/* ---- guardado con respaldo: usa window.storage si está disponible, si no localStorage ---- */
+const storageDisponible = (typeof window.storage !== 'undefined' && window.storage !== null);
+
+async function storageGet(key){
+  if(storageDisponible){
+    try{ const r = await window.storage.get(key, false); return r ? r.value : null; }
+    catch(e){ return null; }
+  }
+  try{ return localStorage.getItem('hockeyapp:'+key); }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  if(storageDisponible){
+    try{ await window.storage.set(key, value, false); return true; }
+    catch(e){ /* si falla, cae al respaldo local */ }
+  }
+  try{ localStorage.setItem('hockeyapp:'+key, value); return true; }
+  catch(e){ console.error('No se pudo guardar', e); return false; }
+}
+async function storageDeleteKey(key){
+  if(storageDisponible){ try{ await window.storage.delete(key, false); }catch(e){} }
+  try{ localStorage.removeItem('hockeyapp:'+key); }catch(e){}
+}
+
+async function init(){
+  try{ const v = await storageGet('partidos-list'); partidos = v ? JSON.parse(v) : []; }catch(e){ partidos = []; }
+  try{ const v2 = await storageGet('tipos-custom'); tiposCustom = v2 ? JSON.parse(v2) : []; }catch(e){ tiposCustom = []; }
+  try{ const v3 = await storageGet('tipos-base-overrides'); overridesBase = v3 ? JSON.parse(v3) : {}; }catch(e){ overridesBase = {}; }
+  try{ const v4 = await storageGet('sheets-url'); sheetsUrl = v4 || ''; }catch(e){ sheetsUrl = ''; }
+  try{ const v5 = await storageGet('equipo-config'); equipoConfig = v5 ? JSON.parse(v5) : { nombre:'', foto:'' }; }catch(e){ equipoConfig = { nombre:'', foto:'' }; }
+  renderHome();
+}
+
+function renderEquipoHeader(){
+  document.getElementById('team-nombre').innerText = equipoConfig.nombre || 'Tus partidos';
+  const avatar = document.getElementById('team-avatar');
+  avatar.innerHTML = equipoConfig.foto ? `<img src="${equipoConfig.foto}">` : '🏑';
+}
+
+function abrirEquipoConfig(){
+  document.getElementById('equipo-nombre-input').value = equipoConfig.nombre || '';
+  const prev = document.getElementById('equipo-preview');
+  prev.innerHTML = equipoConfig.foto ? `<img src="${equipoConfig.foto}">` : '🏑';
+  document.getElementById('equipo-backdrop').classList.remove('hidden');
+}
+function cerrarEquipoConfig(){ document.getElementById('equipo-backdrop').classList.add('hidden'); }
+function onEquipoFoto(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('equipo-preview').innerHTML = `<img src="${reader.result}">`;
+    window._equipoFotoTmp = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function quitarFotoEquipo(){
+  window._equipoFotoTmp = '';
+  document.getElementById('equipo-preview').innerHTML = '🏑';
+}
+async function guardarEquipoConfig(){
+  equipoConfig.nombre = document.getElementById('equipo-nombre-input').value.trim();
+  if(window._equipoFotoTmp !== undefined) equipoConfig.foto = window._equipoFotoTmp;
+  await storageSet('equipo-config', JSON.stringify(equipoConfig));
+  window._equipoFotoTmp = undefined;
+  cerrarEquipoConfig();
+  renderEquipoHeader();
+}
+
+function tipoEfectivo(t){
+  const o = overridesBase[t.id];
+  if(!o) return t;
+  return { ...t, nombre: (o.nombre !== undefined ? o.nombre : t.nombre), subtipos: (o.subtipos !== undefined ? o.subtipos : t.subtipos) };
+}
+
+function fechaHoy(){
+  const d = new Date();
+  return d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+async function guardarPartidosList(){ await storageSet('partidos-list', JSON.stringify(partidos)); }
+async function guardarTiposCustom(){ await storageSet('tipos-custom', JSON.stringify(tiposCustom)); }
+async function guardarPartidoActual(){ if(!partidoActual) return; await storageSet('partido-'+partidoActual.id, JSON.stringify(partidoActual)); }
+
+function renderHome(){
+  document.getElementById('match-screen').classList.add('hidden');
+  document.getElementById('resumen-screen').classList.add('hidden');
+  document.getElementById('home-screen').classList.remove('hidden');
+  actualizarEstadoSheets();
+  renderEquipoHeader();
+  const list = document.getElementById('matches-list');
+  if(partidos.length === 0){
+    list.innerHTML = '<div class="empty-state">Todavía no cargaste ningún partido.</div>';
+    return;
+  }
+  const ordenados = [...partidos].sort((a,b)=> b.id - a.id);
+  list.innerHTML = ordenados.map(p => `
+    <div class="match-card" onclick="abrirPartido(${p.id})">
+      <div class="mc-left">
+        <div class="mc-name">${escapeHtml(p.nombre)}</div>
+        <div class="mc-date">${p.fecha}</div>
+      </div>
+      <div class="mc-score">
+        <span>${p.gf ?? 0} - ${p.gc ?? 0}</span>
+        <button class="mc-delete" onclick="event.stopPropagation(); borrarPartido(${p.id})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s){ const d = document.createElement('div'); d.innerText = s; return d.innerHTML; }
+
+async function crearPartido(){
+  try{
+    const input = document.getElementById('input-nombre');
+    const nombre = input.value.trim() || ('Partido ' + (partidos.length+1));
+    const id = Date.now();
+    const nuevo = {
+      id, nombre, fecha: fechaHoy(),
+      eventos: [], cuartoActual: 1, segundosPorCuarto: {1:0,2:0,3:0,4:0}, gf:0, gc:0
+    };
+    partidos.push({ id, nombre, fecha: nuevo.fecha, gf:0, gc:0 });
+    await guardarPartidosList();
+    await storageSet('partido-'+id, JSON.stringify(nuevo));
+    input.value = '';
+    await abrirPartido(id);
+  }catch(e){
+    console.error(e);
+    alert('No se pudo crear el partido. Probá recargar la página.');
+  }
+}
+
+async function borrarPartido(id){
+  if(!confirm('¿Borrar este partido y todos sus datos?')) return;
+  partidos = partidos.filter(p => p.id !== id);
+  await guardarPartidosList();
+  await storageDeleteKey('partido-'+id);
+  renderHome();
+}
+
+async function abrirPartido(id){
+  try{ const v = await storageGet('partido-'+id); partidoActual = v ? JSON.parse(v) : null; }catch(e){ partidoActual = null; }
+  if(!partidoActual) return;
+  if(!partidoActual.cuartoActual) partidoActual.cuartoActual = 1;
+  if(!partidoActual.segundosPorCuarto) partidoActual.segundosPorCuarto = {1:0,2:0,3:0,4:0};
+  document.getElementById('home-screen').classList.add('hidden');
+  document.getElementById('resumen-screen').classList.add('hidden');
+  document.getElementById('match-screen').classList.remove('hidden');
+  document.getElementById('mt-name').innerText = partidoActual.nombre;
+  document.getElementById('mt-date').innerText = partidoActual.fecha;
+  subtipoAbierto = null;
+  pararTimerVisual();
+  renderQuarterTabs();
+  renderEventGrid();
+  renderResumenMarcador();
+  renderLog();
+}
+
+function volverHome(){
+  pausarTimer();
+  document.getElementById('match-screen').classList.add('hidden');
+  document.getElementById('home-screen').classList.remove('hidden');
+  renderHome();
+}
+
+/* ---- cuartos ---- */
+function renderQuarterTabs(){
+  const wrap = document.getElementById('quarter-tabs');
+  let html = '';
+  for(let q=1; q<=4; q++){
+    const cnt = partidoActual.eventos.filter(e => (e.cuarto||1) === q).length;
+    html += `<div class="q-tab ${q===partidoActual.cuartoActual?'active':''}" onclick="cambiarCuarto(${q})">Q${q}<span class="q-count">${cnt} ev.</span></div>`;
+  }
+  wrap.innerHTML = html;
+  document.getElementById('sb-timer-label').innerText = 'Q'+partidoActual.cuartoActual;
+}
+
+function cambiarCuarto(q){
+  if(q === partidoActual.cuartoActual) return;
+  pausarTimer();
+  partidoActual.cuartoActual = q;
+  guardarPartidoActual();
+  renderQuarterTabs();
+  pararTimerVisual();
+}
+
+/* ---- timer (por cuarto) ---- */
+function segundosActuales(){
+  let extra = 0;
+  if(corriendo && inicioTimestamp){ extra = (Date.now() - inicioTimestamp) / 1000; }
+  const base = (partidoActual.segundosPorCuarto && partidoActual.segundosPorCuarto[partidoActual.cuartoActual]) || 0;
+  return base + extra;
+}
+function formatearTiempo(seg){
+  seg = Math.floor(seg);
+  const m = Math.floor(seg/60).toString().padStart(2,'0');
+  const s = (seg%60).toString().padStart(2,'0');
+  return m+':'+s;
+}
+function toggleTimer(){ if(corriendo){ pausarTimer(); } else { iniciarTimer(); } }
+function iniciarTimer(){
+  corriendo = true;
+  inicioTimestamp = Date.now();
+  document.getElementById('timer-toggle').innerText = '❚❚';
+  timerInterval = setInterval(()=>{ document.getElementById('sb-timer').innerText = formatearTiempo(segundosActuales()); }, 500);
+}
+function pausarTimer(){
+  if(!corriendo) return;
+  partidoActual.segundosPorCuarto[partidoActual.cuartoActual] = segundosActuales();
+  corriendo = false;
+  pararTimerVisual();
+  guardarPartidoActual();
+}
+function pararTimerVisual(){
+  if(timerInterval) clearInterval(timerInterval);
+  document.getElementById('timer-toggle').innerText = '▶';
+  if(partidoActual) document.getElementById('sb-timer').innerText = formatearTiempo((partidoActual.segundosPorCuarto && partidoActual.segundosPorCuarto[partidoActual.cuartoActual]) || 0);
+}
+
+/* ---- grid de eventos ---- */
+function renderEventGrid(){
+  const grid = document.getElementById('event-grid');
+  let html = '';
+
+  TIPOS_BASE.forEach(tBase => {
+    const t = tipoEfectivo(tBase);
+    const tieneSub = t.subtipos && t.subtipos.length;
+    html += `<div class="ev-btn-wrap">
+      <button class="ev-edit" onclick="event.stopPropagation(); abrirModalEditar('${t.id}', true)" title="Editar">✎</button>
+      ${tieneSub
+        ? `<button class="ev-btn ${t.clase}" onclick="abrirSubtipo('${t.id}')">${escapeHtml(t.nombre)}<small>elegir tipo</small></button>`
+        : `<button class="ev-btn ${t.clase}" onclick="registrarEvento('${t.id}', '${escapeHtml(t.nombre)}', null)">${escapeHtml(t.nombre)}${t.sub ? '<small>'+t.sub+'</small>' : ''}</button>`}
+    </div>`;
+  });
+
+  tiposCustom.forEach(t => {
+    const tieneSub = t.subtipos && t.subtipos.length;
+    html += `<div class="ev-btn-wrap">
+      <button class="ev-edit" onclick="event.stopPropagation(); abrirModalEditar('${t.id}', false)" title="Editar">✎</button>
+      ${tieneSub
+        ? `<button class="ev-btn custom" onclick="abrirSubtipo('custom_${t.id}')">${escapeHtml(t.nombre)}<small>elegir tipo</small></button>`
+        : `<button class="ev-btn custom" onclick="registrarEvento('custom_${t.id}', '${escapeHtml(t.nombre)}', null)">${escapeHtml(t.nombre)}</button>`}
+    </div>`;
+  });
+
+  html += `<div class="ev-btn-wrap"><button class="ev-btn add-new" onclick="abrirModal()">+ Agregar botón</button></div>`;
+
+  if(subtipoAbierto){
+    const t = obtenerTipoPorId(subtipoAbierto);
+    if(t){
+      html += `<div class="subtype-panel">
+        <div class="st-label">${escapeHtml(t.nombre)} — elegí una opción:</div>
+        ${t.subtipos.map(s => `<button class="st-btn" onclick="registrarEvento('${subtipoAbierto}', '${escapeHtml(t.nombre)}', '${escapeHtml(s)}')">${escapeHtml(s)}</button>`).join('')}
+        <button class="st-cancel" onclick="cerrarSubtipo()">Cancelar</button>
+      </div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+function obtenerTipoPorId(id){
+  const baseRaw = TIPOS_BASE.find(t => t.id === id);
+  if(baseRaw) return tipoEfectivo(baseRaw);
+  if(id.startsWith('custom_')){
+    const realId = id.replace('custom_','');
+    const c = tiposCustom.find(t => String(t.id) === realId);
+    if(c) return { nombre: c.nombre, subtipos: c.subtipos };
+  }
+  return null;
+}
+
+function abrirSubtipo(id){ subtipoAbierto = (subtipoAbierto === id) ? null : id; renderEventGrid(); }
+function cerrarSubtipo(){ subtipoAbierto = null; renderEventGrid(); }
+
+async function registrarEvento(tipoId, nombre, subtipo){
+  const seg = segundosActuales();
+  const evento = { id: Date.now() + Math.random().toString(16).slice(2), tipoId, nombre, subtipo, seg, cuarto: partidoActual.cuartoActual };
+  partidoActual.eventos.push(evento);
+  if(tipoId === 'gol_favor'){ partidoActual.gf = (partidoActual.gf||0) + 1; }
+  if(tipoId === 'gol_contra'){ partidoActual.gc = (partidoActual.gc||0) + 1; }
+  subtipoAbierto = null;
+  await guardarPartidoActual();
+  await sincronizarResumenEnLista();
+  renderEventGrid();
+  renderResumenMarcador();
+  renderQuarterTabs();
+  renderLog();
+}
+
+async function deshacer(){
+  if(!partidoActual.eventos.length) return;
+  const ultimo = partidoActual.eventos.pop();
+  if(ultimo.tipoId === 'gol_favor'){ partidoActual.gf = Math.max(0,(partidoActual.gf||0)-1); }
+  if(ultimo.tipoId === 'gol_contra'){ partidoActual.gc = Math.max(0,(partidoActual.gc||0)-1); }
+  await guardarPartidoActual();
+  await sincronizarResumenEnLista();
+  renderResumenMarcador();
+  renderQuarterTabs();
+  renderLog();
+}
+
+async function borrarEvento(eid){
+  const idx = partidoActual.eventos.findIndex(e => e.id === eid);
+  if(idx === -1) return;
+  const ev = partidoActual.eventos[idx];
+  if(ev.tipoId === 'gol_favor'){ partidoActual.gf = Math.max(0,(partidoActual.gf||0)-1); }
+  if(ev.tipoId === 'gol_contra'){ partidoActual.gc = Math.max(0,(partidoActual.gc||0)-1); }
+  partidoActual.eventos.splice(idx,1);
+  await guardarPartidoActual();
+  await sincronizarResumenEnLista();
+  renderResumenMarcador();
+  renderQuarterTabs();
+  renderLog();
+}
+
+async function sincronizarResumenEnLista(){
+  const p = partidos.find(x => x.id === partidoActual.id);
+  if(p){ p.gf = partidoActual.gf||0; p.gc = partidoActual.gc||0; }
+  await guardarPartidosList();
+}
+
+function renderResumenMarcador(){
+  document.getElementById('sb-favor').innerText = partidoActual.gf || 0;
+  document.getElementById('sb-contra').innerText = partidoActual.gc || 0;
+  const izq = partidoActual.eventos.filter(e=>e.tipoId==='ataque_izq').length;
+  const der = partidoActual.eventos.filter(e=>e.tipoId==='ataque_der').length;
+  document.getElementById('sb-izq').innerText = izq;
+  document.getElementById('sb-der').innerText = der;
+}
+
+function colorPorTipo(tipoId){
+  if(tipoId === 'gol_favor') return 'var(--favor-light)';
+  if(tipoId === 'gol_contra') return 'var(--contra-light)';
+  if(tipoId === 'perdida') return 'var(--turnover)';
+  if(tipoId.startsWith('ataque')) return 'var(--gold)';
+  return 'var(--panel-lighter)';
+}
+
+function renderLog(){
+  const log = document.getElementById('log-list');
+  if(!partidoActual.eventos.length){ log.innerHTML = '<div class="log-empty">Todavía no registraste eventos.</div>'; return; }
+  const ordenados = [...partidoActual.eventos].reverse();
+  log.innerHTML = ordenados.map(e => `
+    <div class="log-item">
+      <div class="li-left">
+        <span class="li-time">Q${e.cuarto||1} · ${formatearTiempo(e.seg)}</span>
+        <span class="li-tag" style="background:${colorPorTipo(e.tipoId)}"></span>
+        <span>${escapeHtml(e.nombre)}${e.subtipo ? ' · '+escapeHtml(e.subtipo) : ''}</span>
+      </div>
+      <button class="li-del" onclick="borrarEvento('${e.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+/* ---- modal: crear o editar botones ---- */
+function abrirModal(){
+  editandoId = null;
+  editandoEsBase = false;
+  document.getElementById('modal-titulo').innerText = 'Agregar botón';
+  document.getElementById('modal-eliminar').style.display = 'none';
+  document.getElementById('custom-nombre').value = '';
+  document.getElementById('custom-subtipos').value = '';
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function abrirModalEditar(id, esBase){
+  editandoId = id;
+  editandoEsBase = esBase;
+  let nombreActual = '', subtiposActuales = [];
+  if(esBase){
+    const base = TIPOS_BASE.find(t => t.id === id);
+    const eff = tipoEfectivo(base);
+    nombreActual = eff.nombre;
+    subtiposActuales = eff.subtipos || [];
+  } else {
+    const c = tiposCustom.find(t => String(t.id) === String(id));
+    if(!c) return;
+    nombreActual = c.nombre;
+    subtiposActuales = c.subtipos || [];
+  }
+  document.getElementById('modal-titulo').innerText = 'Editar botón';
+  document.getElementById('modal-eliminar').style.display = 'inline-block';
+  document.getElementById('modal-eliminar').innerText = esBase ? 'Restablecer original' : 'Eliminar';
+  document.getElementById('custom-nombre').value = nombreActual;
+  document.getElementById('custom-subtipos').value = subtiposActuales.join(', ');
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function cerrarModal(){ document.getElementById('modal-backdrop').classList.add('hidden'); }
+
+async function guardarModal(){
+  const nombre = document.getElementById('custom-nombre').value.trim();
+  if(!nombre) return;
+  const subtiposRaw = document.getElementById('custom-subtipos').value.trim();
+  const subtipos = subtiposRaw ? subtiposRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+
+  if(editandoId === null){
+    tiposCustom.push({ id: Date.now(), nombre, subtipos });
+    await guardarTiposCustom();
+  } else if(editandoEsBase){
+    overridesBase[editandoId] = { nombre, subtipos };
+    await storageSet('tipos-base-overrides', JSON.stringify(overridesBase));
+  } else {
+    const c = tiposCustom.find(t => String(t.id) === String(editandoId));
+    if(c){ c.nombre = nombre; c.subtipos = subtipos; await guardarTiposCustom(); }
+  }
+  cerrarModal();
+  renderEventGrid();
+}
+
+async function eliminarDesdeModal(){
+  if(editandoId === null) return;
+  if(editandoEsBase){
+    if(!confirm('¿Restablecer este botón a sus opciones originales?')) return;
+    delete overridesBase[editandoId];
+    await storageSet('tipos-base-overrides', JSON.stringify(overridesBase));
+  } else {
+    if(!confirm('¿Eliminar este botón? Los eventos ya cargados con él van a seguir en el registro, pero el botón desaparece.')) return;
+    tiposCustom = tiposCustom.filter(t => String(t.id) !== String(editandoId));
+    await guardarTiposCustom();
+  }
+  cerrarModal();
+  renderEventGrid();
+}
+
+/* ---- resumen / grafico ---- */
+function abrirResumen(){
+  pausarTimer();
+  document.getElementById('match-screen').classList.add('hidden');
+  document.getElementById('resumen-screen').classList.remove('hidden');
+  document.getElementById('rs-date').innerText = partidoActual.nombre + ' · ' + partidoActual.fecha;
+  vistaResumen = 'grafico';
+  renderResumenVistas();
+}
+function cerrarResumen(){
+  document.getElementById('resumen-screen').classList.add('hidden');
+  document.getElementById('match-screen').classList.remove('hidden');
+  renderQuarterTabs();
+  pararTimerVisual();
+}
+function cambiarVistaResumen(v){
+  vistaResumen = v;
+  document.getElementById('rt-grafico').classList.toggle('active', v==='grafico');
+  document.getElementById('rt-tabla').classList.toggle('active', v==='tabla');
+  document.getElementById('resumen-grafico').classList.toggle('hidden', v!=='grafico');
+  document.getElementById('resumen-tabla').classList.toggle('hidden', v!=='tabla');
+}
+
+function calcularGrupos(){
+  const grupos = {};
+  partidoActual.eventos.forEach(e=>{
+    const key = e.tipoId + '|' + (e.subtipo||'');
+    if(!grupos[key]) grupos[key] = { nombre: e.nombre, subtipo: e.subtipo, tipoId: e.tipoId, total:0, porCuarto:{1:0,2:0,3:0,4:0} };
+    grupos[key].total++;
+    const c = e.cuarto||1;
+    grupos[key].porCuarto[c] = (grupos[key].porCuarto[c]||0)+1;
+  });
+  return Object.values(grupos).sort((a,b)=> b.total - a.total);
+}
+
+function renderResumenVistas(){
+  const grupos = calcularGrupos();
+  const graficoDiv = document.getElementById('resumen-grafico');
+  const tablaDiv = document.getElementById('resumen-tabla');
+
+  if(!grupos.length){
+    graficoDiv.innerHTML = '<div class="empty-state">Todavía no hay eventos cargados en este partido.</div>';
+    tablaDiv.innerHTML = '<div class="empty-state">Todavía no hay eventos cargados en este partido.</div>';
+    cambiarVistaResumen(vistaResumen);
+    const obsDivVacio = document.getElementById('resumen-observaciones');
+    obsDivVacio.innerHTML = (partidoActual.observaciones && partidoActual.observaciones.trim())
+      ? `<div class="chart-card"><h4>Observaciones</h4><p style="white-space:pre-wrap; line-height:1.5; margin:0;">${escapeHtml(partidoActual.observaciones)}</p></div>`
+      : '';
+    return;
+  }
+
+  const maxTotal = Math.max(...grupos.map(g=>g.total));
+  graficoDiv.innerHTML = `<div class="chart-card"><h4>Total de eventos por botón / opción</h4>
+    ${grupos.map(g => `
+      <div class="bar-row">
+        <div class="br-label"><span>${escapeHtml(g.nombre)}${g.subtipo ? ' · '+escapeHtml(g.subtipo) : ''}</span><span class="br-count">${g.total}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(g.total/maxTotal*100).toFixed(1)}%; background:${colorPorTipo(g.tipoId)}"></div></div>
+      </div>
+    `).join('')}
+  </div>`;
+
+  tablaDiv.innerHTML = `<div class="chart-card"><h4>Detalle por cuarto</h4>
+    <table class="resumen-table">
+      <thead><tr><th>Evento</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Total</th></tr></thead>
+      <tbody>
+        ${grupos.map(g => `<tr>
+          <td>${escapeHtml(g.nombre)}${g.subtipo ? ' · '+escapeHtml(g.subtipo) : ''}</td>
+          <td>${g.porCuarto[1]||0}</td><td>${g.porCuarto[2]||0}</td><td>${g.porCuarto[3]||0}</td><td>${g.porCuarto[4]||0}</td>
+          <td class="total-col">${g.total}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+  cambiarVistaResumen(vistaResumen);
+
+  const obsDiv = document.getElementById('resumen-observaciones');
+  if(partidoActual.observaciones && partidoActual.observaciones.trim()){
+    obsDiv.innerHTML = `<div class="chart-card"><h4>Observaciones</h4><p style="white-space:pre-wrap; line-height:1.5; margin:0;">${escapeHtml(partidoActual.observaciones)}</p></div>`;
+  } else {
+    obsDiv.innerHTML = '';
+  }
+}
+
+/* ---- observaciones ---- */
+function abrirObservaciones(){
+  document.getElementById('obs-texto').value = partidoActual.observaciones || '';
+  document.getElementById('obs-backdrop').classList.remove('hidden');
+}
+function cerrarObservaciones(){ document.getElementById('obs-backdrop').classList.add('hidden'); }
+async function guardarObservaciones(){
+  partidoActual.observaciones = document.getElementById('obs-texto').value;
+  await guardarPartidoActual();
+  cerrarObservaciones();
+}
+
+/* ---- exportar resumen como texto (para pegar en Drive, WhatsApp, etc.) ---- */
+function textoResumen(){
+  const grupos = calcularGrupos();
+  let txt = `PLANILLA DE PARTIDO\n${partidoActual.nombre} — ${partidoActual.fecha}\n`;
+  txt += `Resultado: ${partidoActual.gf||0} - ${partidoActual.gc||0}\n\n`;
+  txt += `EVENTOS POR TIPO\n`;
+  grupos.forEach(g => {
+    txt += `- ${g.nombre}${g.subtipo ? ' ('+g.subtipo+')' : ''}: ${g.total}  [Q1:${g.porCuarto[1]||0} Q2:${g.porCuarto[2]||0} Q3:${g.porCuarto[3]||0} Q4:${g.porCuarto[4]||0}]\n`;
+  });
+  if(partidoActual.observaciones && partidoActual.observaciones.trim()){
+    txt += `\nOBSERVACIONES\n${partidoActual.observaciones.trim()}\n`;
+  }
+  return txt;
+}
+
+async function exportarResumenTexto(){
+  const txt = textoResumen();
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert('Resumen copiado. Ya lo podés pegar en un documento de Drive, WhatsApp, mail, etc.');
+  }catch(e){
+    // si el navegador bloquea el portapapeles, ofrecemos descarga como respaldo
+    const blob = new Blob([txt], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (partidoActual.nombre || 'resumen').replace(/[^a-z0-9]+/gi,'_') + '.txt';
+    a.click();
+  }
+}
+
+/* ---- Google Sheets ---- */
+async function actualizarEstadoSheets(){
+  const url = await storageGet('sheets-webapp-url');
+  const el = document.getElementById('sheets-status');
+  if(!el) return;
+  el.innerText = url ? '✓ Conectado' : 'No conectado todavía';
+}
+
+async function configurarSheetsUrl(){
+  const actual = (await storageGet('sheets-webapp-url')) || '';
+  const nueva = prompt('Pegá acá el link de tu Aplicación web de Google Apps Script (el que termina en /exec):', actual);
+  if(nueva === null) return;
+  await storageSet('sheets-webapp-url', nueva.trim());
+  await actualizarEstadoSheets();
+  if(nueva.trim()) alert('Listo, quedó guardado. Ahora desde el Resumen de cualquier partido podés tocar "Enviar a Sheets".');
+}
+
+async function enviarASheets(){
+  let url = await storageGet('sheets-webapp-url');
+  if(!url){
+    const nueva = prompt('Todavía no configuraste el link. Pegalo acá (Apps Script, terminado en /exec):');
+    if(!nueva) return;
+    url = nueva.trim();
+    await storageSet('sheets-webapp-url', url);
+  }
+  const grupos = calcularGrupos();
+  const detalle = grupos.map(g => `${g.nombre}${g.subtipo ? ' ('+g.subtipo+')' : ''}: ${g.total} [Q1:${g.porCuarto[1]||0} Q2:${g.porCuarto[2]||0} Q3:${g.porCuarto[3]||0} Q4:${g.porCuarto[4]||0}]`).join('\n');
+  const payload = {
+    nombre: partidoActual.nombre,
+    fecha: partidoActual.fecha,
+    gf: partidoActual.gf || 0,
+    gc: partidoActual.gc || 0,
+    detalle,
+    observaciones: partidoActual.observaciones || ''
+  };
+  try{
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    alert('Enviado ✓. Por una restricción del navegador no podemos confirmar la respuesta automáticamente, así que dale un vistazo a tu planilla para chequear que llegó la fila.');
+  }catch(e){
+    console.error(e);
+    alert('No se pudo enviar. Revisá: 1) que el link sea el correcto (terminado en /exec), 2) que tengas internet, y 3) que hayas abierto este archivo directo en el navegador (no desde la vista previa del chat, ahí no tiene permiso para conectarse a internet).');
+  }
+}
+
+/* ---- configuración: conexión con Google Sheets ---- */
+function abrirConfig(){
+  document.getElementById('config-url').value = sheetsUrl;
+  document.getElementById('config-backdrop').classList.remove('hidden');
+}
+function cerrarConfig(){ document.getElementById('config-backdrop').classList.add('hidden'); }
+async function guardarConfig(){
+  sheetsUrl = document.getElementById('config-url').value.trim();
+  await storageSet('sheets-url', sheetsUrl);
+  cerrarConfig();
+  alert(sheetsUrl ? 'Listo, quedó conectado.' : 'Se borró la conexión.');
+}
+
+async function enviarASheets(){
+  if(!sheetsUrl){
+    alert('Todavía no conectaste una planilla. Tocá "⚙️ Conectar Sheets" arriba de todo para pegar la URL.');
+    return;
+  }
+  const payload = {
+    nombre: partidoActual.nombre,
+    fecha: partidoActual.fecha,
+    gf: partidoActual.gf || 0,
+    gc: partidoActual.gc || 0,
+    resumenTexto: textoResumen(),
+    observaciones: partidoActual.observaciones || ''
+  };
+  try{
+    await fetch(sheetsUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    alert('Enviado. Revisá tu planilla de Google Sheets para confirmar que llegó la fila nueva.');
+  }catch(e){
+    console.error(e);
+    alert('No se pudo enviar. Recordá que esto solo funciona si abriste el archivo directo en el navegador (no desde la vista previa del chat) y con conexión a internet.');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
